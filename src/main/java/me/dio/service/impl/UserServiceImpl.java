@@ -4,8 +4,7 @@ import me.dio.domain.model.User;
 import me.dio.domain.repository.UserRepository;
 import me.dio.service.UserService;
 import org.springframework.stereotype.Service;
-
-import java.util.NoSuchElementException;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * @author William
@@ -22,14 +21,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findById(Long id) {
-        return userRepository.findById(id).orElseThrow(NoSuchElementException::new);
+        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
     }
 
     @Override
+    @Transactional
     public User create(User userToCreate) {
-        if (userRepository.existsByAccountNumber(userToCreate.getAccount().getNumber())) {
-            throw new IllegalArgumentException("This Account number already exists.");
+        if (existsByAccountNumber(userToCreate.getAccount().getNumber())) {
+            throw new RuntimeException("Account number already exists");
         }
         return userRepository.save(userToCreate);
+    }
+
+    @Override
+    public boolean existsByAccountNumber(String accountNumber) {
+        return userRepository.existsByAccountNumber(accountNumber);
     }
 }
